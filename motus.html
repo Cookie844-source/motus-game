@@ -1,33 +1,80 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Motus</title>
+  <meta charset="UTF-8" />
+  <title>Motus - Cookie844</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
+      background: #1a1a1a;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
+    .container {
+      text-align: center;
+      background: #2a2a2a;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #00000099;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #ffcc00;
+    }
+
+    p {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+
     input {
-      font-size: 20px;
+      font-size: 2em;
       padding: 10px;
-      width: 100px;
+      width: 120px;
       text-align: center;
+      border-radius: 10px;
+      border: none;
+      outline: none;
     }
+
+    #result {
+      margin-top: 20px;
+      font-size: 2em;
+    }
+
     #message {
       margin-top: 20px;
-      font-size: 24px;
-      color: green;
+      font-size: 1.5em;
+    }
+
+    span {
+      margin: 0 5px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <h1>Motus</h1>
-  <p>Devine le mot de 4 lettres :</p>
-  <input type="text" id="guess" maxlength="4" autofocus />
-  <div id="result"></div>
-  <div id="message"></div>
+  <div class="container">
+    <h1>🎮 MOTUS</h1>
+    <p>Devine le mot mystère en 4 lettres :</p>
+    <input type="text" id="guess" maxlength="4" autofocus />
+    <div id="result"></div>
+    <div id="message"></div>
+  </div>
 
   <script>
     const mot = "iléa";
@@ -38,27 +85,27 @@
       const messageDiv = document.getElementById("message");
 
       if (guess.length !== 4) {
-        messageDiv.innerHTML = "Mot invalide (4 lettres)";
+        messageDiv.innerHTML = "⛔ Entre un mot de 4 lettres.";
         return;
       }
 
       let result = "";
       for (let i = 0; i < 4; i++) {
         if (guess[i] === mot[i]) {
-          result += `<span style="color: green;">${guess[i]}</span>`;
+          result += `<span style="background: green;">${guess[i]}</span>`;
         } else if (mot.includes(guess[i])) {
-          result += `<span style="color: orange;">${guess[i]}</span>`;
+          result += `<span style="background: orange;">${guess[i]}</span>`;
         } else {
-          result += `<span style="color: grey;">${guess[i]}</span>`;
+          result += `<span style="background: gray;">${guess[i]}</span>`;
         }
       }
 
       resultDiv.innerHTML += `<div>${result}</div>`;
 
       if (guess === mot) {
-        messageDiv.innerHTML = "🎉 Bravo ! Tu as trouvé le mot !";
+        messageDiv.innerHTML = "🎉 Bravo, tu as trouvé le mot !";
       } else {
-        messageDiv.innerHTML = "❌ Mauvaise réponse, on recommence...";
+        messageDiv.innerHTML = "❌ Raté ! On recommence...";
         setTimeout(() => {
           document.getElementById("guess").value = "";
           messageDiv.innerHTML = "";
@@ -66,7 +113,7 @@
       }
     }
 
-    document.getElementById("guess").addEventListener("keydown", function(e) {
+    document.getElementById("guess").addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         verifierMotus();
       }
