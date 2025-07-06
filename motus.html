@@ -2,122 +2,211 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Motus - Cookie844</title>
+  <title>Motus Iléa</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      background: #1a1a1a;
-      color: white;
       font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .container {
+      background-color: #121212;
+      color: white;
       text-align: center;
-      background: #2a2a2a;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 0 20px #00000099;
+      padding: 50px;
     }
-
-    h1 {
-      font-size: 3em;
-      margin-bottom: 20px;
-      color: #ffcc00;
-    }
-
-    p {
-      font-size: 1.2em;
-      margin-bottom: 15px;
-    }
-
     input {
-      font-size: 2em;
       padding: 10px;
-      width: 120px;
+      font-size: 1.5em;
       text-align: center;
+      width: 200px;
+      margin: 10px;
       border-radius: 10px;
       border: none;
-      outline: none;
     }
-
-    #result {
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-top: 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #00b894;
+      color: white;
+      cursor: pointer;
+    }
+    .result span {
+      margin: 0 4px;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .green { background-color: green; }
+    .orange { background-color: orange; }
+    .gray { background-color: #555; }
+    .letters {
       margin-top: 20px;
       font-size: 2em;
+      letter-spacing: 10px;
     }
-
-    #message {
-      margin-top: 20px;
+    #timer {
       font-size: 1.5em;
-    }
-
-    span {
-      margin: 0 5px;
-      padding: 5px 10px;
-      border-radius: 5px;
-      display: inline-block;
+      margin-bottom: 10px;
+      color: #f1c40f;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🎮 MOTUS</h1>
-    <p>Devine le mot mystère en 4 lettres :</p>
-    <input type="text" id="guess" maxlength="4" autofocus />
-    <div id="result"></div>
-    <div id="message"></div>
-  </div>
+  <h1>🎯 MOTUS - DÉFI ILÉA</h1>
+  <div id="timer">Temps restant : 2:00</div>
+  <p id="instruction">Étape 1 : Devine le mot mystère</p>
+  <input type="text" id="guess" placeholder="Tape ici" autofocus />
+  <div class="result" id="result"></div>
+  <div id="message"></div>
+  <div class="letters" id="secretLetters"></div>
+  <button id="rejouer" class="hidden" onclick="location.reload()">🔁 Rejouer</button>
+
+  <!-- Sons -->
+  <audio id="success-sound" src="success.mp3"></audio>
+  <audio id="error-sound" src="error.mp3"></audio>
+  <audio id="win-sound" src="win.mp3"></audio>
 
   <script>
-    const mot = "iléa";
+    const mots = [
+      { mot: "amour", lettre: "A" },
+      { mot: "japon", lettre: "L" },
+      { mot: "animaux", lettre: "I" },
+      { mot: "mignonne", lettre: "É" }
+    ];
+
+    let etape = 0;
+    let lettresTrouvées = [];
+    let timerInterval;
+    let timeLeft = 120; // 2 minutes
+
+    const guessInput = document.getElementById("guess");
+    const resultDiv = document.getElementById("result");
+    const messageDiv = document.getElementById("message");
+    const instruction = document.getElementById("instruction");
+    const lettersDiv = document.getElementById("secretLetters");
+    const timerDisplay = document.getElementById("timer");
+    const rejouerBtn = document.getElementById("rejouer");
+
+    const successSound = document.getElementById("success-sound");
+    const errorSound = document.getElementById("error-sound");
+    const winSound = document.getElementById("win-sound");
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 120;
+      updateTimer();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          messageDiv.innerHTML = "⏰ Temps écoulé ! Passage au mot suivant.";
+          etape++;
+          if (etape < mots.length) {
+            instruction.innerText = `Étape ${etape + 1} : Nouveau mot à deviner`;
+            guessInput.value = "";
+            resultDiv.innerHTML = "";
+            startTimer();
+          } else {
+            montrerMotFinal();
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimer() {
+      const min = Math.floor(timeLeft / 60);
+      const sec = timeLeft % 60;
+      timerDisplay.innerText = `Temps restant : ${min}:${sec.toString().padStart(2, "0")}`;
+    }
 
     function verifierMotus() {
-      const guess = document.getElementById("guess").value.toLowerCase();
-      const resultDiv = document.getElementById("result");
-      const messageDiv = document.getElementById("message");
+      const guess = guessInput.value.toLowerCase();
+      const motActuel = mots[etape].mot;
+      resultDiv.innerHTML = "";
+      messageDiv.innerHTML = "";
 
-      if (guess.length !== 4) {
-        messageDiv.innerHTML = "⛔ Entre un mot de 4 lettres.";
+      if (guess.length !== motActuel.length) {
+        messageDiv.innerText = `Le mot doit contenir ${motActuel.length} lettres.`;
         return;
       }
 
-      let result = "";
-      for (let i = 0; i < 4; i++) {
-        if (guess[i] === mot[i]) {
-          result += `<span style="background: green;">${guess[i]}</span>`;
-        } else if (mot.includes(guess[i])) {
-          result += `<span style="background: orange;">${guess[i]}</span>`;
+      let correct = 0;
+      let affichage = "";
+
+      for (let i = 0; i < guess.length; i++) {
+        if (guess[i] === motActuel[i]) {
+          affichage += `<span class="green">${guess[i]}</span>`;
+          correct++;
+        } else if (motActuel.includes(guess[i])) {
+          affichage += `<span class="orange">${guess[i]}</span>`;
         } else {
-          result += `<span style="background: gray;">${guess[i]}</span>`;
+          affichage += `<span class="gray">${guess[i]}</span>`;
         }
       }
 
-      resultDiv.innerHTML += `<div>${result}</div>`;
+      resultDiv.innerHTML = affichage;
 
-      if (guess === mot) {
-        messageDiv.innerHTML = "🎉 Bravo, tu as trouvé le mot !";
+      if (correct === motActuel.length) {
+        successSound.play();
+        lettresTrouvées.push(mots[etape].lettre);
+        messageDiv.innerHTML = `✅ Bien joué ! Lettre gagnée : <strong>${mots[etape].lettre}</strong>`;
+        etape++;
+        clearInterval(timerInterval);
+
+        if (etape < mots.length) {
+          instruction.innerText = `Étape ${etape + 1} : Nouveau mot à deviner`;
+          guessInput.value = "";
+          startTimer();
+        } else {
+          montrerMotFinal();
+        }
       } else {
-        messageDiv.innerHTML = "❌ Raté ! On recommence...";
-        setTimeout(() => {
-          document.getElementById("guess").value = "";
-          messageDiv.innerHTML = "";
-        }, 1500);
+        errorSound.play();
+        messageDiv.innerText = "❌ Essaie encore.";
       }
     }
 
-    document.getElementById("guess").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
+    function montrerMotFinal() {
+      instruction.innerHTML = `🎁 Tu as gagné 4 lettres. Trouve le prénom final :`;
+      const lettresMelangées = ["A", "L", "I", "É"];
+      lettersDiv.innerHTML = lettresMelangées.map(l => `<span>_</span>`).join(" ");
+      guessInput.value = "";
+      guessInput.placeholder = "Tape le prénom final";
+      guessInput.onkeydown = (e) => {
+        if (e.key === "Enter") verifierMotFinal();
+      };
+      updateTimer(0);
+      timerDisplay.classList.add("hidden");
+    }
+
+    function verifierMotFinal() {
+      const finalGuess = guessInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const solution = "ilea"; // sans accent
+
+      if (finalGuess === solution) {
+        lettersDiv.innerHTML = `<span class="green">I</span><span class="green">L</span><span class="green">É</span><span class="green">A</span>`;
+        messageDiv.innerHTML = "🏆 Bravo ! Tu as trouvé le prénom secret : <strong>Iléa</strong> 💖";
+        winSound.play();
+        rejouerBtn.classList.remove("hidden");
+      } else {
+        errorSound.play();
+        messageDiv.innerHTML = "😢 Mauvais ordre. Réessaye !";
+      }
+    }
+
+    guessInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && etape < mots.length) {
         verifierMotus();
       }
     });
+
+    startTimer();
   </script>
 </body>
 </html>
+<!-- Sons -->
+<audio id="success-sound" src="success.mp3"></audio>
+<audio id="error-sound" src="error.mp3"></audio>
+<audio id="win-sound" src="win.mp3"></audio>
